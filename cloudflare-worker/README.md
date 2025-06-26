@@ -151,7 +151,7 @@ Add to your `claude_desktop_config.json`:
       "command": "curl",
       "args": [
         "-X", "POST",
-        "https://your-worker.your-subdomain.workers.dev",
+        "https://puppeteer.techsci.dev",
         "-H", "Content-Type: application/json",
         "-d", "@-"
       ]
@@ -168,6 +168,7 @@ Add to your `claude_desktop_config.json`:
 
 ## Development
 
+### Local Development
 ```bash
 # Start development server
 npm run dev
@@ -179,6 +180,31 @@ npm run secret:scrapingbee
 # Deploy to production
 npm run deploy:prod
 ```
+
+### GitHub Integration
+
+This project is configured for automatic deployment via GitHub Actions:
+
+**Repository**: `https://github.com/code-craka/puppeteer-mcp`
+
+**Build Configuration**:
+- **Build command**: `npm run build`
+- **Deploy command**: `npx wrangler deploy`
+- **Version command**: `npx wrangler versions upload`
+- **Root directory**: `/`
+
+**Automatic Deployment**: 
+- Pushes to `main` branch automatically deploy to production
+- Pull requests deploy to development environment
+- GitHub Actions workflow handles CI/CD pipeline
+
+**Required GitHub Secrets**:
+- `CLOUDFLARE_API_TOKEN` - Your Cloudflare API token
+- `BROWSERLESS_TOKEN` - Set via Wrangler secrets
+
+**Live URLs**:
+- **Production**: `https://puppeteer.techsci.dev`
+- **Workers URL**: `https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev`
 
 ## Costs
 

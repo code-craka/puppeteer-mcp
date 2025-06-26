@@ -1,0 +1,51 @@
+name: Deploy Puppeteer MCP to Cloudflare Workers
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'cloudflare-worker/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'cloudflare-worker/**' ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Cloudflare Workers
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'cloudflare-worker/package-lock.json'
+          
+      - name: Install dependencies
+        run: |
+          cd cloudflare-worker
+          npm ci
+          
+      - name: Build project
+        run: |
+          cd cloudflare-worker
+          npm run build
+          
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: 'cloudflare-worker'
+          command: deploy
+          
+      - name: Deploy preview for PRs
+        uses: cloudflare/wrangler-action@v3
+        if: github.event_name == 'pull_request'
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: 'cloudflare-worker'
+          command: deploy --env development

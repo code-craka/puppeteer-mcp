@@ -21,10 +21,14 @@ vars = { BROWSER_SERVICE = "browserless" }
 # Enable Node.js compatibility for MCP SDK
 node_compat = true
 
-# Custom domains (optional)
-# routes = [
-#   { pattern = "your-domain.com/*", zone_name = "your-domain.com" }
-# ]
+# Custom domain configuration
+routes = [
+  { pattern = "puppeteer.techsci.dev/*", zone_name = "techsci.dev" }
+]
+
+# GitHub integration compatible build settings
+# Note: Build is handled automatically by Wrangler for TypeScript files
+# For GitHub Actions, use: npm run build && npx wrangler deploy
 
 # KV namespace for storing screenshots/logs (optional)
 # [[kv_namespaces]]

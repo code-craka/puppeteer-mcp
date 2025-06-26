@@ -153,7 +153,7 @@ docker run -i --rm --init \
 
 ### **🚀 Live Production Deployment**
 
-**Live URL**: `https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev`
+**Live URL**: `https://puppeteer.techsci.dev`
 
 Our Puppeteer MCP server is successfully deployed on Cloudflare Workers with Browserless.io integration.
 
@@ -178,12 +178,12 @@ npm run deploy
 
 ```bash
 # Test tools listing
-curl -X POST https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev \
+curl -X POST https://puppeteer.techsci.dev \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":"test"}'
 
 # Test screenshot capture
-curl -X POST https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev \
+curl -X POST https://puppeteer.techsci.dev \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"browser_screenshot","arguments":{"name":"test","url":"https://example.com"}},"id":"test"}'
 ```

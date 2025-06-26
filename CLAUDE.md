@@ -30,7 +30,8 @@ echo "YOUR_BROWSERLESS_TOKEN" | npx wrangler secret put BROWSERLESS_TOKEN
 npx wrangler deploy
 ```
 
-**Live URL**: `https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev`
+**Live URL**: `https://puppeteer.techsci.dev`  
+**Alternative URL**: `https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev`
 
 ## Architecture
 
@@ -56,7 +57,8 @@ npx wrangler deploy
 ### Cloudflare Workers
 - **Source**: `cloudflare-worker/index.ts`
 - **Deployment**: Wrangler CLI
-- **URL**: `https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev`
+- **Primary URL**: `https://puppeteer.techsci.dev`
+- **Alternative URL**: `https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev`
 
 ## Available Tools
 
@@ -102,12 +104,12 @@ echo '{"method": "initialize", "params": {"protocolVersion": "2024-11-05", "capa
 ### Cloudflare Workers Testing
 ```bash
 # Test tools listing
-curl -X POST https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev \
+curl -X POST https://puppeteer.techsci.dev \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":"test"}'
 
 # Test screenshot
-curl -X POST https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev \
+curl -X POST https://puppeteer.techsci.dev \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"browser_screenshot","arguments":{"name":"test","url":"https://example.com"}},"id":"test"}'
 ```

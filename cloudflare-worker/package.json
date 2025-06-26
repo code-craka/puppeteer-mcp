@@ -5,13 +5,15 @@
   "main": "index.ts",
   "type": "module",
   "scripts": {
+    "build": "tsc",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "deploy:prod": "wrangler deploy --env production",
-    "build": "tsc",
     "test": "wrangler dev --test",
     "secret:browserless": "wrangler secret put BROWSERLESS_TOKEN",
-    "secret:scrapingbee": "wrangler secret put SCRAPINGBEE_TOKEN"
+    "secret:scrapingbee": "wrangler secret put SCRAPINGBEE_TOKEN",
+    "versions:upload": "wrangler versions upload",
+    "versions:deploy": "wrangler versions deploy"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.1"
