@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Build outputs  
+dist/
+*.tsbuildinfo
+
+# Wrangler
+.wrangler/
+.dev.vars
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

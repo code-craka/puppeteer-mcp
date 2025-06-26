@@ -14,8 +14,11 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && shx chmod +x dist/*.js",
-    "prepare": "npm run build",
+    "build": "./build.sh",
+    "build:local": "tsc && shx chmod +x dist/*.js",
+    "build:worker": "cd cloudflare-worker && npm ci && npm run build",
+    "deploy": "cd cloudflare-worker && npx wrangler deploy",
+    "prepare": "echo 'Skipping prepare script for GitHub compatibility'",
     "watch": "tsc --watch"
   },
   "dependencies": {

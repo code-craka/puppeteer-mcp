@@ -7,6 +7,7 @@ on:
   pull_request:
     branches: [ main ]
     paths: [ 'cloudflare-worker/**' ]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -20,19 +21,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: 'cloudflare-worker/package-lock.json'
           
-      - name: Install dependencies
-        run: |
-          cd cloudflare-worker
-          npm ci
+      - name: Install dependencies (Worker only)
+        working-directory: ./cloudflare-worker
+        run: npm ci
           
-      - name: Build project
-        run: |
-          cd cloudflare-worker
-          npm run build
+      - name: Build TypeScript
+        working-directory: ./cloudflare-worker
+        run: npm run build
           
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
