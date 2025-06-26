@@ -289,7 +289,8 @@ class ScrapingBeeClient {
     }
 
     const buffer = await response.arrayBuffer();
-    return Buffer.from(buffer).toString('base64');
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    return base64;
   }
 
   async extractContent(options: {
@@ -310,7 +311,7 @@ class ScrapingBeeClient {
       throw new Error(`Content extraction failed: ${response.statusText}`);
     }
 
-    const result = await response.json();
+    const result: any = await response.json();
     return result.content || '';
   }
 }
@@ -488,7 +489,7 @@ export default {
 
     if (request.method === 'POST') {
       try {
-        const body = await request.json();
+        const body: any = await request.json();
         
         // Handle MCP protocol requests
         if (body.method === 'tools/list') {
