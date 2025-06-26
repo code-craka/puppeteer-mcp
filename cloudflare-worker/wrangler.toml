@@ -1,0 +1,33 @@
+name = "puppeteer-mcp-worker"
+main = "index.ts"
+compatibility_date = "2024-06-26"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+BROWSER_SERVICE = "browserless"  # or "scrapingbee"
+
+# Environment variables (set these using wrangler secret)
+# BROWSERLESS_TOKEN = "your-browserless-token"
+# SCRAPINGBEE_TOKEN = "your-scrapingbee-token"
+
+# For development
+[env.development]
+vars = { BROWSER_SERVICE = "browserless" }
+
+# For production
+[env.production]
+vars = { BROWSER_SERVICE = "browserless" }
+
+# Enable Node.js compatibility for MCP SDK
+node_compat = true
+
+# Custom domains (optional)
+# routes = [
+#   { pattern = "your-domain.com/*", zone_name = "your-domain.com" }
+# ]
+
+# KV namespace for storing screenshots/logs (optional)
+# [[kv_namespaces]]
+# binding = "SCREENSHOTS"
+# id = "your-kv-namespace-id"
+# preview_id = "your-preview-kv-namespace-id"
