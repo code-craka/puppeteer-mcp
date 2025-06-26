@@ -109,7 +109,7 @@ const consoleLogs: string[] = [];
 const screenshots = new Map<string, string>();
 let currentUrl: string | null = null;
 
-// Browserless.io API client
+// Browserless.io API client using REST endpoints
 class BrowserlessClient {
   private token: string;
   private baseUrl: string;
@@ -126,27 +126,36 @@ class BrowserlessClient {
     fullPage?: boolean;
     html?: string;
   }): Promise<string> {
+    const requestBody: any = {
+      url: options.url,
+      options: {
+        fullPage: options.fullPage || false,
+        type: 'png'
+      }
+    };
+
+    // Add selector wait
+    if (options.selector) {
+      requestBody.waitForSelector = options.selector;
+    }
+
     const response = await fetch(`${this.baseUrl}/screenshot?token=${this.token}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url: options.url,
-        html: options.html,
-        options: {
-          selector: options.selector,
-          viewport: options.viewport || { width: 1280, height: 720 },
-          fullPage: options.fullPage || false,
-          type: 'png',
-          encoding: 'base64'
-        }
-      })
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
-      throw new Error(`Screenshot failed: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Screenshot failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    return await response.text();
+    // Return base64 encoded image
+    const buffer = await response.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    return base64;
   }
 
   async execute(options: {
@@ -154,38 +163,38 @@ class BrowserlessClient {
     code: string;
     waitFor?: string;
   }): Promise<any> {
-    const puppeteerScript = this.generatePuppeteerScript(options);
+    const functionCode = `
+      module.exports = async ({ page, context }) => {
+        try {
+          ${options.url ? `await page.goto('${options.url}', { waitUntil: 'networkidle0' });` : ''}
+          ${options.waitFor ? `await page.waitForSelector('${options.waitFor}', { timeout: 30000 });` : ''}
+          
+          const result = await page.evaluate(() => {
+            ${options.code}
+          });
+          
+          return result;
+        } catch (error) {
+          return { error: error.message };
+        }
+      };
+    `;
     
     const response = await fetch(`${this.baseUrl}/function?token=${this.token}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/javascript' },
-      body: puppeteerScript
+      headers: { 
+        'Content-Type': 'application/javascript',
+        'Cache-Control': 'no-cache'
+      },
+      body: functionCode
     });
 
     if (!response.ok) {
-      throw new Error(`Execution failed: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Execution failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     return await response.json();
-  }
-
-  private generatePuppeteerScript(options: {
-    url?: string;
-    code: string;
-    waitFor?: string;
-  }): string {
-    return `
-      module.exports = async ({ page, context }) => {
-        ${options.url ? `await page.goto('${options.url}');` : ''}
-        ${options.waitFor ? `await page.waitForSelector('${options.waitFor}');` : ''}
-        
-        const result = await page.evaluate(() => {
-          ${options.code}
-        });
-        
-        return result;
-      };
-    `;
   }
 
   async click(options: {
@@ -193,13 +202,19 @@ class BrowserlessClient {
     selector: string;
     waitFor?: string;
   }): Promise<void> {
-    const script = this.generatePuppeteerScript({
+    await this.execute({
       url: options.url,
       waitFor: options.waitFor,
-      code: `document.querySelector('${options.selector}').click();`
+      code: `
+        const element = document.querySelector('${options.selector}');
+        if (element) {
+          element.click();
+          return 'clicked';
+        } else {
+          throw new Error('Element not found: ${options.selector}');
+        }
+      `
     });
-
-    await this.execute({ code: script });
   }
 
   async fill(options: {
@@ -207,16 +222,20 @@ class BrowserlessClient {
     selector: string;
     value: string;
   }): Promise<void> {
-    const script = this.generatePuppeteerScript({
+    await this.execute({
       url: options.url,
       code: `
         const element = document.querySelector('${options.selector}');
-        element.value = '${options.value}';
-        element.dispatchEvent(new Event('input', { bubbles: true }));
+        if (element) {
+          element.value = '${options.value.replace(/'/g, "\\'")}';
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+          element.dispatchEvent(new Event('change', { bubbles: true }));
+          return 'filled';
+        } else {
+          throw new Error('Element not found: ${options.selector}');
+        }
       `
     });
-
-    await this.execute({ code: script });
   }
 
   async extractContent(options: {
@@ -228,11 +247,14 @@ class BrowserlessClient {
       url: options.url,
       waitFor: options.waitFor,
       code: options.selector 
-        ? `document.querySelector('${options.selector}').innerText`
-        : `document.body.innerText`
+        ? `
+          const element = document.querySelector('${options.selector}');
+          return element ? element.innerText : 'Element not found';
+        `
+        : `return document.body.innerText;`
     });
 
-    return result;
+    return typeof result === 'string' ? result : JSON.stringify(result);
   }
 }
 
@@ -447,85 +469,148 @@ export default {
       service: env.BROWSER_SERVICE || 'browserless'
     };
 
-    const server = new Server(
-      {
-        name: "cloudflare-browser-mcp",
-        version: "1.0.0",
-      },
-      {
-        capabilities: {
-          resources: {},
-          tools: {},
-        },
-      },
-    );
+    // Handle CORS
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
 
-    // Setup request handlers
-    server.setRequestHandler(ListResourcesRequestSchema, async () => ({
-      resources: [
-        {
-          uri: "console://logs",
-          mimeType: "text/plain",
-          name: "Browser console logs",
-        },
-        ...Array.from(screenshots.keys()).map(name => ({
-          uri: `screenshot://${name}`,
-          mimeType: "image/png",
-          name: `Screenshot: ${name}`,
-        })),
-      ],
-    }));
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
 
-    server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-      const uri = request.params.uri.toString();
-
-      if (uri === "console://logs") {
-        return {
-          contents: [{
-            uri,
-            mimeType: "text/plain",
-            text: consoleLogs.join("\n"),
-          }],
-        };
-      }
-
-      if (uri.startsWith("screenshot://")) {
-        const name = uri.split("://")[1];
-        const screenshot = screenshots.get(name);
-        if (screenshot) {
-          return {
-            contents: [{
-              uri,
-              mimeType: "image/png",
-              blob: screenshot,
-            }],
-          };
-        }
-      }
-
-      throw new Error(`Resource not found: ${uri}`);
-    });
-
-    server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: TOOLS,
-    }));
-
-    server.setRequestHandler(CallToolRequestSchema, async (request) =>
-      handleToolCall(request.params.name, request.params.arguments ?? {})
-    );
-
-    // Handle HTTP requests (for Cloudflare Workers)
-    if (request.method === 'POST') {
-      const body = await request.json();
-      // Process MCP request and return response
-      // This is a simplified example - you'd need proper MCP protocol handling
-      return new Response(JSON.stringify({ message: 'MCP request processed' }), {
-        headers: { 'Content-Type': 'application/json' }
+    if (request.method === 'GET') {
+      return new Response('Cloudflare Browser MCP Server - Ready', {
+        headers: { 'Content-Type': 'text/plain', ...corsHeaders }
       });
     }
 
-    return new Response('Cloudflare Browser MCP Server', {
-      headers: { 'Content-Type': 'text/plain' }
+    if (request.method === 'POST') {
+      try {
+        const body = await request.json();
+        
+        // Handle MCP protocol requests
+        if (body.method === 'tools/list') {
+          return new Response(JSON.stringify({
+            jsonrpc: "2.0",
+            id: body.id,
+            result: { tools: TOOLS }
+          }), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          });
+        }
+
+        if (body.method === 'tools/call') {
+          const result = await handleToolCall(
+            body.params.name, 
+            body.params.arguments || {}
+          );
+          
+          return new Response(JSON.stringify({
+            jsonrpc: "2.0",
+            id: body.id,
+            result: result
+          }), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          });
+        }
+
+        if (body.method === 'resources/list') {
+          return new Response(JSON.stringify({
+            jsonrpc: "2.0",
+            id: body.id,
+            result: {
+              resources: [
+                {
+                  uri: "console://logs",
+                  mimeType: "text/plain",
+                  name: "Browser console logs",
+                },
+                ...Array.from(screenshots.keys()).map(name => ({
+                  uri: `screenshot://${name}`,
+                  mimeType: "image/png",
+                  name: `Screenshot: ${name}`,
+                })),
+              ]
+            }
+          }), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          });
+        }
+
+        if (body.method === 'resources/read') {
+          const uri = body.params.uri;
+          
+          if (uri === "console://logs") {
+            return new Response(JSON.stringify({
+              jsonrpc: "2.0",
+              id: body.id,
+              result: {
+                contents: [{
+                  uri,
+                  mimeType: "text/plain",
+                  text: consoleLogs.join("\n"),
+                }]
+              }
+            }), {
+              headers: { 'Content-Type': 'application/json', ...corsHeaders }
+            });
+          }
+
+          if (uri.startsWith("screenshot://")) {
+            const name = uri.split("://")[1];
+            const screenshot = screenshots.get(name);
+            if (screenshot) {
+              return new Response(JSON.stringify({
+                jsonrpc: "2.0",
+                id: body.id,
+                result: {
+                  contents: [{
+                    uri,
+                    mimeType: "image/png",
+                    blob: screenshot,
+                  }]
+                }
+              }), {
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
+              });
+            }
+          }
+
+          return new Response(JSON.stringify({
+            jsonrpc: "2.0",
+            id: body.id,
+            error: { code: -1, message: `Resource not found: ${uri}` }
+          }), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders }
+          });
+        }
+
+        // Default response for unknown methods
+        return new Response(JSON.stringify({
+          jsonrpc: "2.0",
+          id: body.id,
+          error: { code: -1, message: `Unknown method: ${body.method}` }
+        }), {
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        });
+
+      } catch (error) {
+        return new Response(JSON.stringify({
+          jsonrpc: "2.0",
+          id: null,
+          error: { code: -1, message: `Server error: ${(error as Error).message}` }
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        });
+      }
+    }
+
+    return new Response('Method not allowed', { 
+      status: 405,
+      headers: corsHeaders
     });
   },
 };

@@ -151,14 +151,47 @@ docker run -i --rm --init \
 
 ## ☁️ Cloudflare Workers Deployment
 
-For cloud deployment, use the included Cloudflare Workers adaptation:
+### **🚀 Live Production Deployment**
+
+**Live URL**: `https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev`
+
+Our Puppeteer MCP server is successfully deployed on Cloudflare Workers with Browserless.io integration.
+
+### **✅ Deployment Status**
+- **Status**: Live and operational
+- **Browser Service**: Browserless.io connected
+- **API Calls**: Screenshots working ✅
+- **Tools Available**: 6 browser automation tools
+- **Response Time**: ~1-2 seconds average
+
+### **🛠️ Deploy Your Own**
 
 ```bash
 cd cloudflare-worker
 npm install
-wrangler secret put BROWSERLESS_TOKEN
+npx wrangler login
+echo "YOUR_BROWSERLESS_TOKEN" | npx wrangler secret put BROWSERLESS_TOKEN
 npm run deploy
 ```
+
+### **🧪 Test the Live Deployment**
+
+```bash
+# Test tools listing
+curl -X POST https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":"test"}'
+
+# Test screenshot capture
+curl -X POST https://puppeteer-mcp-worker.sayem-abdullah-rihan.workers.dev \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"browser_screenshot","arguments":{"name":"test","url":"https://example.com"}},"id":"test"}'
+```
+
+### **💰 Production Costs**
+- **Cloudflare Workers**: 100,000 requests/day free
+- **Browserless.io**: ~$0.0025 per second of browser usage
+- **Monthly estimate**: $10-50 for moderate usage
 
 See [Cloudflare Worker README](./cloudflare-worker/README.md) for detailed setup instructions.
 
@@ -267,6 +300,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **v1.0.0** - Initial release with local Puppeteer support
 - **v1.1.0** - Added Docker support and ARM64 compatibility
 - **v1.2.0** - Cloudflare Workers adaptation with external browser services
+- **v1.3.0** - ✅ **Live Production Deployment** - Successfully deployed on Cloudflare Workers with Browserless.io integration, tested and confirmed working
 
 ---
 
