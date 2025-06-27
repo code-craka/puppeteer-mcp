@@ -3,6 +3,10 @@ main = "dist/index.js"
 compatibility_date = "2024-06-26"
 compatibility_flags = ["nodejs_compat"]
 
+# Observability configuration for latest wrangler
+[observability.logs]
+enabled = true
+
 [vars]
 BROWSER_SERVICE = "browserless"  # or "scrapingbee"
 
