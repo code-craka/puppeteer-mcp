@@ -127,3 +127,37 @@ curl -X POST https://puppeteer.techsci.dev \
 - **Browser Service**: Browserless.io integration confirmed working
 - **Cost**: ~$0.0025/second browser usage (Browserless.io)
 - **Limits**: Cloudflare Workers 10-second execution timeout
+
+## Deployment Memories
+
+### GitHub Deployment Milestones
+- 🔧 Resolved TypeScript compilation errors in Cloudflare Worker
+  - Fixed Buffer usage by replacing with btoa()
+  - Added proper type annotations for JSON responses
+  - Eliminated all "unknown type" errors
+  - Ensured clean build process
+
+- 🚀 GitHub Integration Configuration
+  - Updated root package.json to resolve Puppeteer dependency conflicts
+  - Created separate build scripts for local and cloud deployments
+  - Modified GitHub Actions workflow to focus on cloudflare-worker directory
+  - Added Node.js 20 support with correct working directory configurations
+
+- 🌐 Deployment Architecture Improvements
+  - Separated root project (Local Puppeteer MCP server)
+  - Isolated cloudflare-worker for clean cloud deployment
+  - Ensured no cross-dependency conflicts in GitHub builds
+
+- ✅ Deployment Status Confirmed
+  - Custom domain (https://puppeteer.techsci.dev) fully operational
+  - Screenshot tool working perfectly
+  - All 6 cloud tools successfully functional
+  - CI/CD pipeline configured for automatic deployment
+
+- 🔧 Final Build System Optimization (Latest)
+  - Resolved all GitHub deployment conflicts by separating build processes
+  - Fixed TypeScript compilation in cloudflare-worker with proper Buffer handling
+  - Updated build.sh to only build worker components for GitHub integration
+  - Configured GitHub Actions to use Node.js 20 with isolated working directories
+  - Eliminated cross-project dependency conflicts between root and worker builds
+  - Verified deployment pipeline is fully operational and ready for production use
