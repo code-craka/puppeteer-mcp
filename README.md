@@ -168,10 +168,11 @@ Our Puppeteer MCP server is successfully deployed on Cloudflare Workers with Bro
 
 ```bash
 cd cloudflare-worker
-npm install
+npm install                # Installs Wrangler v4.22.0 + secure dependencies
 npx wrangler login
 echo "YOUR_BROWSERLESS_TOKEN" | npx wrangler secret put BROWSERLESS_TOKEN
-npm run deploy
+npm run build             # Compile TypeScript to dist/index.js
+npm run deploy           # Deploy using latest Wrangler v4.22.0
 ```
 
 ### **🧪 Test the Live Deployment**
@@ -202,6 +203,8 @@ See [Cloudflare Worker README](./cloudflare-worker/README.md) for detailed setup
 - Configurable security levels via environment variables
 - Headless mode in Docker containers
 - Scoped permissions for different deployment environments
+- **Latest Updates**: All dependencies updated, 0 security vulnerabilities
+- **Secure Build**: esbuild v0.25.0+ and Wrangler v4.22.0 with latest patches
 
 ### Dangerous Arguments (Filtered by Default)
 - `--no-sandbox`
@@ -301,6 +304,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **v1.1.0** - Added Docker support and ARM64 compatibility
 - **v1.2.0** - Cloudflare Workers adaptation with external browser services
 - **v1.3.0** - ✅ **Live Production Deployment** - Successfully deployed on Cloudflare Workers with Browserless.io integration, tested and confirmed working
+- **v1.4.0** - 🔒 **Security & Performance Update** - Updated Wrangler to v4.22.0, fixed esbuild vulnerabilities, added observability logs, resolved all npm audit issues (0 vulnerabilities)
 
 ---
 

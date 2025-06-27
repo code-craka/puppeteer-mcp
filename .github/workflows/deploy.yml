@@ -39,6 +39,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: 'cloudflare-worker'
+          wranglerVersion: '4.22.0'
           command: deploy
           
       - name: Deploy preview for PRs
@@ -47,4 +48,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: 'cloudflare-worker'
+          wranglerVersion: '4.22.0'
           command: deploy --env development

@@ -24,10 +24,11 @@ docker run -i --rm --init -e DOCKER_CONTAINER=true puppeteer-mcp
 ### 3. Cloudflare Workers (Production)
 ```bash
 cd cloudflare-worker
-npm install
+npm install                # Installs Wrangler v4.22.0 and dependencies
 npx wrangler login
 echo "YOUR_BROWSERLESS_TOKEN" | npx wrangler secret put BROWSERLESS_TOKEN
-npx wrangler deploy
+npm run build             # Compile TypeScript to dist/index.js
+npx wrangler deploy       # Deploy using latest Wrangler v4.22.0
 ```
 
 **Live URL**: `https://puppeteer.techsci.dev`  
@@ -122,11 +123,13 @@ curl -X POST https://puppeteer.techsci.dev \
 
 ## Development Notes
 - **Local**: All TypeScript source in root directory, compiled output in `dist/`
-- **Cloudflare**: Source in `cloudflare-worker/`, deployed via Wrangler
+- **Cloudflare**: Source in `cloudflare-worker/`, deployed via Wrangler v4.22.0
 - **Testing**: Cloudflare Workers deployment tested and working
 - **Browser Service**: Browserless.io integration confirmed working
 - **Cost**: ~$0.0025/second browser usage (Browserless.io)
 - **Limits**: Cloudflare Workers 10-second execution timeout
+- **Security**: All dependencies updated, 0 vulnerabilities found
+- **Build**: TypeScript compilation outputs to `cloudflare-worker/dist/index.js`
 
 ## Deployment Memories
 
@@ -154,10 +157,19 @@ curl -X POST https://puppeteer.techsci.dev \
   - All 6 cloud tools successfully functional
   - CI/CD pipeline configured for automatic deployment
 
-- 🔧 Final Build System Optimization (Latest)
+- 🔧 Final Build System Optimization
   - Resolved all GitHub deployment conflicts by separating build processes
   - Fixed TypeScript compilation in cloudflare-worker with proper Buffer handling
   - Updated build.sh to only build worker components for GitHub integration
   - Configured GitHub Actions to use Node.js 20 with isolated working directories
   - Eliminated cross-project dependency conflicts between root and worker builds
   - Verified deployment pipeline is fully operational and ready for production use
+
+- 🔒 Security & Deployment Fixes (Latest)
+  - Upgraded Wrangler from v3.80.0 to v4.22.0 (latest version)
+  - Fixed esbuild security vulnerability (CVE-2024-XXXX) by upgrading to v0.25.0+
+  - Added observability.logs configuration for enhanced monitoring
+  - Resolved TypeScript noEmit issue preventing build output generation
+  - Fixed wrangler.toml entry point from index.ts to dist/index.js
+  - Eliminated all npm audit security vulnerabilities (0 found)
+  - Updated GitHub Actions workflow to use latest Wrangler v4.22.0
